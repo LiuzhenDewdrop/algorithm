@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.algorithm.repository.AnswerRep" >
+	<resultMap id="answer" type="com.algorithm.entity.Answer" >
+		<id column="ID" property="id" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="sub_id" property="subId" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="input" property="ansInput" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="output" property="ansOutput" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="proportion" property="proportion" javaType="java.lang.Float" jdbcType="FLOAT" />
+	</resultMap>
+
+	<select id="getListBySub" resultMap="answer" parameterType="java.lang.Integer">
+		SELECT t.ID, t.sub_id, t.input, t.output, t.proportion
+		FROM ALG_ANSWER t
+		WHERE t.sub_id = #{subId}
+	</select>
+
+	<insert id="addAnswers" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO ALG_ANSWER
+		(sub_id,
+		input,
+		output,
+		proportion
+		) VALUES
+		<foreach collection="list" item="item" index="index" separator=",">
+			(#{item.subId, jdbcType= INTEGER},
+			#{item.ansInput, jdbcType= VARCHAR},
+			#{item.ansOutput, jdbcType= VARCHAR},
+			#{item.proportion, jdbcType= FLOAT})
+		</foreach>
+	</insert>
+
+</mapper>

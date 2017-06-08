@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.algorithm.repository.LevelExpRelationRep" >
+	<resultMap id="levelExpRelation" type="com.algorithm.entity.LevelExpRelation" >
+		<id column="ID" property="id" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="user_level" property="userLevel" javaType="java.lang.Byte" jdbcType="TINYINT" />
+		<result column="level_name" property="levelName" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="exp_needed" property="expNeeded" javaType="java.lang.Integer" jdbcType="INTEGER" />
+	</resultMap>
+
+	<select id="getList" resultMap="levelExpRelation">
+		SELECT t.id, t.user_level, t1.item_name AS level_name, t.exp_needed
+		FROM LEVEL_EXP_RELATION t
+		LEFT JOIN ALG_DICTIONARY t1 ON t.user_level = t1.item_code AND t1.type_code = 'user_level'
+		ORDER BY t.user_level
+	</select>
+</mapper>

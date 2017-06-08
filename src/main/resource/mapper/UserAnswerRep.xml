@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.algorithm.repository.UserAnswerRep" >
+	<resultMap id="answer" type="com.algorithm.entity.UserAnswer" >
+		<id column="ID" property="id" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="user_id" property="userId" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="user_level" property="userLevel" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="user_name" property="userName" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="sub_id" property="subId" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="sub_level" property="subLevel" javaType="java.lang.Byte" jdbcType="TINYINT" />
+		<result column="sub_score" property="subScore" javaType="java.lang.Byte" jdbcType="TINYINT" />
+		<result column="sub_title" property="subTitle" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="sub_content" property="subContent" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="answer_code" property="answerCode" javaType="java.lang.String" jdbcType="BLOB" typeHandler="com.algorithm.util.ConvertBlobTypeHandler"/>
+		<result column="status" property="status" javaType="java.lang.Boolean" jdbcType="BIT" />
+		<result column="create_time" property="createTime" javaType="java.util.Date" />
+	</resultMap>
+
+	<select id="getUserAnswer" resultMap="answer" parameterType="java.lang.Integer">
+		SELECT t.ID, t.user_id, t.sub_id, t.answer_code, t.status, t.create_time
+		FROM USER_ANSWER t
+		WHERE t.user_id = #{userId}
+			AND t.sub_id = #{subId}
+	</select>
+
+	<insert id="addUserAnswer" parameterType="com.algorithm.entity.UserAnswer" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO USER_ANSWER
+		(user_id, sub_id, answer_code,
+		status, create_time)
+		VALUES
+		(#{userId, jdbcType= INTEGER}, #{subId, jdbcType= INTEGER}, #{answerCode, jdbcType= BLOB},
+		#{status, jdbcType= BIT}, #{createTime})
+	</insert>
+
+	<update id="updateUserAnswer">
+		UPDATE USER_ANSWER
+		SET answer_code= #{answerCode, jdbcType= BLOB, javaType= java.lang.String},
+		status= #{status, jdbcType= BIT, javaType= java.lang.Boolean},
+		create_time= #{createTime, javaType= java.util.Date}
+		WHERE id= #{id, jdbcType= INTEGER, javaType= java.lang.Integer}
+	</update>
+	
+	<select id="getAns4Judge" parameterType="java.lang.Integer" resultMap="answer">
+		SELECT t.id, t.user_id, t2.user_level, t.sub_id, t3.sub_level, t3.sub_score, t3.sub_title, t3.sub_content, t2.user_name, t.create_time, t.answer_code
+		FROM USER_ANSWER t
+		LEFT JOIN ALG_JUDGEMENT t1 ON t.id = t1.ans_id
+		LEFT JOIN ALG_USER t2 ON t.user_id = t2.id
+		LEFT JOIN ALG_SUBJECT t3 ON t.sub_id = t3.id
+		WHERE t.id = #{id}
+	</select>
+	
+</mapper>

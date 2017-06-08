@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.algorithm.repository.KeyValueRep" >
+	<resultMap id="kv" type="com.algorithm.entity.KeyValue" >
+		<id column="ID" property="id" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="sub_id" property="subId" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="input" property="input" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="output" property="output" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="proportion" property="proportion" javaType="java.lang.Float" jdbcType="FLOAT" />
+	</resultMap>
+
+	<select id="getListByType" resultMap="kv" parameterType="java.lang.String">
+		SELECT t.item_code AS 'key', t.item_name AS 'value'
+		FROM ALG_DICTIONARY t
+		WHERE t.type_code = #{typeCode}
+		AND t.is_activity > 0
+		ORDER BY CONVERT(t.item_code, SIGNED)
+	</select>
+
+</mapper>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.algorithm.repository.JudgementRep" >
+	<resultMap id="judgement" type="com.algorithm.entity.Judgement" >
+		<id column="ID" property="id" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="user_id" property="userId" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="user_level" property="userLevel" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="sub_id" property="subId" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="ans_id" property="ansId" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="correct" property="correct" javaType="java.lang.Boolean" jdbcType="BIT" />
+		<result column="score" property="score" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="run_time" property="runTime" javaType="java.lang.Long" jdbcType="BIGINT" />
+		<result column="examiner_id" property="examinerId" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="create_time" property="createTime" javaType="java.util.Date" />
+	</resultMap>
+
+	<insert id="addJudgements" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO ALG_JUDGEMENT
+		(user_id,
+		user_level,
+		sub_id,
+		ans_id,
+		correct,
+		score,
+		run_time,
+		examiner_id,
+		create_time)
+		VALUES
+		<foreach collection="list" item="item" index="index" separator=",">
+			(#{item.userId, jdbcType= INTEGER},
+			#{item.userLevel, jdbcType= VARCHAR},
+			#{item.subId, jdbcType= INTEGER},
+			#{item.ansId, jdbcType= INTEGER},
+			#{item.correct, jdbcType= BIT},
+			#{item.score, jdbcType= INTEGER},
+			#{item.runTime, jdbcType= BIGINT},
+			#{item.examinerId, jdbcType= INTEGER},
+			#{item.createTime})
+		</foreach>
+	</insert>
+
+	<select id="countJudgements" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+		SELECT COUNT(1)
+		FROM ALG_JUDGEMENT t
+		WHERE t.user_id = #{userId}
+		AND t.sub_id = #{subId}
+	</select>
+</mapper>

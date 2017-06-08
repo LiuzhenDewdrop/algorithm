@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.algorithm.repository.UserRep" >
+	<resultMap id="user" type="com.algorithm.entity.User" >
+		<id column="ID" property="id" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="user_name" property="userName" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="user_level" property="userLevel" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="level_name" property="levelName" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="experience_point" property="experiencePoint" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="login_name" property="loginName" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<!--<result column="login_password" property="loginPassword" javaType="java.lang.String" jdbcType="VARCHAR" />-->
+		<result column="sex" property="sex" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="blood_group" property="bloodGroup" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="star_sign" property="starSign" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="email" property="email" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="head_photo" property="headPhoto" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="photo_url" property="photoUrl" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="profession" property="profession" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="autograph" property="autograph" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="self_introduction" property="selfIntroduction" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="is_activity" property="isActivity" javaType="java.lang.Boolean" jdbcType="BIT" />
+		<result column="role_id" property="roleId" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="role_name" property="roleName" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="create_time" property="createTime" javaType="java.util.Date" />
+		<result column="rank" property="rank" javaType="java.lang.Integer" jdbcType="INTEGER" />
+	</resultMap>
+
+	<select id="getList" resultMap="user">
+		SELECT
+		t2.id,
+		t2.user_name,
+		t2.user_level,
+		t2.level_name,
+		t2.experience_point,
+		t2.profession,
+		t2.head_photo,
+		t2.photo_url,
+		t2.autograph,
+		t2.self_introduction,
+		t2.is_activity,
+		t2.role_name,
+		@increase := @increase + 1 AS increase,
+		@rownum := CASE
+		WHEN t2.experience_point = @mark OR @mark = -1 THEN @rownum
+		WHEN @mark := IF(t2.experience_point =0,-1,t2.experience_point) THEN @increase
+		END AS rank
+		FROM (SELECT
+		t.id,
+		t.user_name,
+		t.user_level,
+		t1.item_name AS level_name,
+		t.experience_point,
+		t.profession,
+		t.head_photo,
+		t.photo_url,
+		t.autograph,
+		t.self_introduction,
+		t.is_activity,
+		t3.role_name
+		FROM ALG_USER t
+		LEFT JOIN ALG_DICTIONARY t1 ON t.user_level = t1.item_code
+		LEFT JOIN ALG_ROLE t3 ON t.role_id = t3.id
+		WHERE t1.type_code = 'user_level'
+		<if test="role != 1">
+			AND t.role_id &lt;&gt; 1
+			AND t.role_id &lt;&gt; 4
+			AND t.is_activity &gt; 0
+		</if>
+		ORDER BY t.experience_point DESC, t.id) t2,
+		(SELECT @rownum := 0, @mark := NULL, @increase := 0 ) r;
+	</select>
+
+	<select id="getList4Home" resultMap="user">
+		SELECT t.id, t.user_name, t.user_level, t1.item_name AS level_name,
+			t2.item_name AS sex, t.head_photo, t.photo_url, t.profession, t.autograph, t.self_introduction
+		FROM ALG_USER t
+		LEFT JOIN ALG_DICTIONARY t1 ON t.user_level = t1.item_code
+		LEFT JOIN ALG_DICTIONARY t2 ON t.sex = t2.item_code AND t2.type_code = 'sex'
+		WHERE t.is_activity &gt; 0
+		AND t.role_id &lt;&gt; 1
+		AND t.role_id &lt;&gt; 4
+		AND t1.type_code = 'user_level'
+		ORDER BY t.experience_point DESC, t.id
+		LIMIT 4
+	</select>
+
+	<select id="countUser" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT COUNT(1)
+		FROM ALG_USER t
+		WHERE t.login_name = #{loginName}
+		AND t.login_password = #{loginPsw}
+		AND t.is_activity > 0
+	</select>
+
+	<select id="getUserByLogin" parameterType="java.lang.String" resultMap="user">
+		SELECT t.id, t.user_name, t.user_level, t1.item_name AS level_name, t.experience_point,
+			t.login_name, t.sex, t.blood_group, t.star_sign,
+			t.email, t.head_photo, t.photo_url, t.profession, t.autograph, t.self_introduction, t.is_activity, t.role_id
+		FROM ALG_USER t
+		LEFT JOIN ALG_DICTIONARY t1 ON t.user_level = t1.item_code
+		WHERE t1.type_code = 'user_level'
+		AND t.login_name = #{loginName}
+		AND t.login_password = #{loginPsw}
+		AND t.is_activity > 0
+	</select>
+
+	<select id="countLoginName" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT COUNT(1)
+		FROM ALG_USER t
+		WHERE t.login_name = #{loginName}
+	</select>
+
+	<select id="countUserName" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT COUNT(1)
+		FROM ALG_USER t
+		WHERE t.user_name = #{userName}
+	</select>
+
+	<insert id="addUser" parameterType="com.algorithm.entity.User" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO ALG_USER
+		(user_name, user_level, experience_point, login_name,
+		login_password, sex, blood_group, star_sign,
+		email, head_photo, photo_url, profession, autograph,
+		self_introduction, is_activity, role_id, create_time)
+		VALUES
+		(#{userName, jdbcType= VARCHAR}, #{userLevel, jdbcType= VARCHAR}, #{experiencePoint, jdbcType= INTEGER}, #{loginName, jdbcType= VARCHAR},
+		#{loginPassword, jdbcType= VARCHAR}, #{sex, jdbcType= VARCHAR}, #{bloodGroup, jdbcType= VARCHAR}, #{starSign, jdbcType= VARCHAR},
+		#{email, jdbcType= VARCHAR}, #{headPhoto, jdbcType= VARCHAR}, #{photoUrl, jdbcType= VARCHAR}, #{profession, jdbcType= VARCHAR}, #{autograph, jdbcType= VARCHAR},
+		#{selfIntroduction, jdbcType= VARCHAR}, #{isActivity, jdbcType= BIT}, #{roleId, jdbcType= INTEGER}, #{createTime})
+	</insert>
+	
+	<update id="updateLoginUser" parameterType="com.algorithm.entity.User">
+		UPDATE ALG_USER
+		SET user_name= #{userName, jdbcType= VARCHAR},
+			sex= #{sex, jdbcType= VARCHAR},
+			blood_group= #{bloodGroup, jdbcType= VARCHAR},
+			star_sign= #{starSign, jdbcType= VARCHAR},
+			email= #{email, jdbcType= VARCHAR},
+			head_photo= #{headPhoto, jdbcType= VARCHAR},
+			photo_url= #{photoUrl, jdbcType= VARCHAR},
+			profession= #{profession, jdbcType= VARCHAR},
+			autograph= #{autograph, jdbcType= VARCHAR},
+			self_introduction= #{selfIntroduction, jdbcType= VARCHAR}
+		WHERE id = #{id, jdbcType= INTEGER}
+	</update>
+
+	<update id="updatePsw">
+		UPDATE ALG_USER
+		SET login_password = #{loginPassword, jdbcType= VARCHAR, javaType= java.lang.String}
+		WHERE id= #{id, jdbcType= INTEGER, javaType= java.lang.Integer}
+	</update>
+
+	<select id="getInfoById" resultMap="user" parameterType="java.lang.Integer">
+		SELECT t.id, t.user_name, t.user_level, t1.item_name AS level_name, t.experience_point,
+			t.login_name, t.sex, t.blood_group, t.star_sign,
+			t.email, t.head_photo, t.photo_url, t.profession, t.autograph, t.self_introduction, t.is_activity,
+			t.role_id, t.create_time
+		FROM ALG_USER t
+		LEFT JOIN ALG_DICTIONARY t1 ON t.user_level = t1.item_code
+		WHERE t1.type_code = 'user_level'
+		AND t.id = #{id}
+	</select>
+
+	<update id="updateUserExp">
+		UPDATE ALG_USER
+		SET user_level= #{userLevel, jdbcType= VARCHAR, javaType= java.lang.String},
+		experience_point= #{experiencePoint, jdbcType= INTEGER, javaType= java.lang.Integer}
+		WHERE id = #{id, jdbcType= INTEGER, javaType= java.lang.Integer}
+	</update>
+
+	<update id="updateActivity">
+		UPDATE ALG_USER
+		SET is_activity = #{isActivity, jdbcType= BIT, javaType= java.lang.Boolean}
+		WHERE id= #{id, jdbcType= INTEGER, javaType= java.lang.Integer}
+	</update>
+
+	<update id="updateRole">
+		UPDATE ALG_USER
+		SET role_id = #{roleId, jdbcType= INTEGER, javaType= java.lang.Integer}
+		WHERE id= #{id, jdbcType= INTEGER, javaType= java.lang.Integer}
+	</update>
+
+<!--
+	t.id, t.user_name, t.user_level, t1.item_name AS level_name, t.experience_point,
+	t.login_name, t2.item_name AS sex, t3.item_name AS blood_group, t4.item_name AS star_sign,
+	t.email, t.head_photo, t.profession, t.autograph, t.self_introduction
+-->
+</mapper>

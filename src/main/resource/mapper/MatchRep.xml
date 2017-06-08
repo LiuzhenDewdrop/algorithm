@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.algorithm.repository.SubjectRep" >
+	<resultMap id="match" type="com.algorithm.entity.Match" >
+		<id column="ID" property="id" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="match_title" property="matchTitle" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="match_content" property="matchContent" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="match_status" property="matchStatus" javaType="java.lang.Byte" jdbcType="TINYINT" />
+		<result column="create_id" property="createId" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="create_time" property="createTime" javaType="java.util.Date" />
+	</resultMap>
+
+	<select id="getList" resultMap="match">
+
+	</select>
+
+	<insert id="addMatch" parameterType="com.algorithm.entity.Match" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO ALG_MATCH (
+			match_title,
+			match_content,
+			create_id,
+			create_time
+		) VALUES (
+			#{matchTitle, jdbcType= VARCHAR},
+			#{matchContent, jdbcType= VARCHAR},
+			#{createId, jdbcType= INTEGER},
+			#{createTime}
+		)
+	</insert>
+</mapper>

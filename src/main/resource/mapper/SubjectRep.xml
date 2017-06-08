@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.algorithm.repository.SubjectRep" >
+	<resultMap id="subject" type="com.algorithm.entity.Subject" >
+		<id column="ID" property="id" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="sub_title" property="subTitle" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="sub_content" property="subContent" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="example_input" property="exampleInput" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="example_output" property="exampleOutput" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="sub_level" property="subLevel" javaType="java.lang.Byte" jdbcType="TINYINT" />
+		<result column="sub_score" property="subScore" javaType="java.lang.Byte" jdbcType="TINYINT" />
+		<result column="rela_score" property="relativeScore" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="sub_type" property="subType" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="sub_type_name" property="subTypeName" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="sub_mode" property="subMode" javaType="java.lang.Byte" jdbcType="TINYINT" />
+		<result column="create_id" property="createId" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="create_time" property="createTime" javaType="java.util.Date" />
+		<result column="user_name" property="userName" javaType="java.lang.String" jdbcType="VARCHAR" />
+	</resultMap>
+
+	<select id="getCount4Home" resultType="java.util.Map">
+		SELECT SUM(IF(t.sub_level &lt; 6,1,0)) AS newborn,
+		SUM(IF(t.sub_level &gt; 5 AND t.sub_level &lt; 16,1,0)) AS warrior,
+		SUM(IF(t.sub_level &gt; 15 AND t.sub_level &lt; 26,1,0)) AS hero,
+		SUM(IF(t.sub_level &gt; 25,1,0)) AS king,
+		SUM(1) AS total
+		FROM ALG_SUBJECT t
+		WHERE t.sub_mode > 0
+	</select>
+
+	<select id="getList" resultMap="subject">
+		SELECT t.ID, t.sub_title, t.sub_content, t.sub_level, t.sub_score,
+		CASE
+		WHEN #{userLevel} - t.sub_level &gt; 0 AND #{userLevel} - t.sub_level &lt; 6 THEN t.sub_score * (10 + t.sub_level - #{userLevel}) /10
+		WHEN #{userLevel} - t.sub_level &gt; 5 AND #{userLevel} - t.sub_level &lt; 11 THEN t.sub_score * 0.2
+		WHEN #{userLevel} - t.sub_level &gt; 10 THEN 0
+		ELSE t.sub_score
+		END * t2.config_value AS rela_score,
+		t.sub_type, t1.item_name AS sub_type_name, t.sub_mode
+		FROM ALG_SUBJECT t
+		LEFT JOIN ALG_DICTIONARY t1 ON t.sub_type = t1.item_code
+		LEFT JOIN ALG_CONFIG t2 ON t2.config_code = 'ratio'
+		WHERE t1.type_code = 'subject_type'
+		<if test="subMode != 0">
+			AND t.sub_mode = #{subMode}
+		</if>
+		<if test="index == 1">
+			AND t.sub_level &lt; 6
+		</if>
+		<if test="index == 2">
+			AND t.sub_level &gt; 5 AND sub_level &lt; 16
+		</if>
+		<if test="index == 3">
+			AND t.sub_level &gt; 15 AND sub_level &lt; 26
+		</if>
+		<if test="index == 4">
+			AND t.sub_level &gt; 25
+		</if>
+		ORDER BY
+		CASE
+		WHEN t.sub_level &lt; #{userLevel} THEN #{userLevel} + 3 - t.sub_level
+		WHEN t.sub_level &gt; #{userLevel} + 3 THEN t.sub_level
+		ELSE t.sub_level - #{userLevel}
+		END
+	</select>
+
+	<select id="getSubById" resultMap="subject" parameterType="java.lang.Integer">
+		SELECT t.ID, t.sub_title, t.sub_content, t.example_input, t.example_output, t.sub_level, t.sub_score, t.sub_type, t1.item_name AS sub_type_name, t.sub_mode
+		FROM ALG_SUBJECT t
+		LEFT JOIN ALG_DICTIONARY t1 ON t.sub_type = t1.item_code
+		WHERE t1.type_code = 'subject_type'
+		AND t.id = #{id}
+	</select>
+
+	<insert id="addSubject" parameterType="com.algorithm.entity.Subject" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO ALG_SUBJECT (
+			sub_title,
+			sub_content,
+			example_input,
+			example_output,
+			sub_level,
+			sub_score,
+			sub_type,
+			sub_mode,
+			create_id,
+			create_time
+		) VALUES (
+			#{subTitle, jdbcType= VARCHAR},
+			#{subContent, jdbcType= VARCHAR},
+			#{exampleInput, jdbcType= VARCHAR},
+			#{exampleOutput, jdbcType= VARCHAR},
+			#{subLevel, jdbcType= TINYINT},
+			#{subScore, jdbcType= TINYINT},
+			#{subType, jdbcType= VARCHAR},
+			#{subMode, jdbcType= TINYINT},
+			#{createId, jdbcType= INTEGER},
+			#{createTime}
+		)
+	</insert>
+
+	<select id="getList4Judge" resultMap="subject">
+		SELECT t.id, t3.sub_level, t3.sub_title, t3.sub_content, t2.user_name, t.create_time, t4.item_name AS sub_type_name
+		FROM USER_ANSWER t
+		LEFT JOIN ALG_USER t2 ON t.user_id = t2.id
+		LEFT JOIN ALG_SUBJECT t3 ON t.sub_id = t3.id
+		LEFT JOIN ALG_DICTIONARY t4 ON t3.sub_type = t4.item_code
+		WHERE t.`status` > 0
+		AND NOT EXISTS (
+		SELECT 1
+		FROM ALG_JUDGEMENT t1
+		WHERE t1.user_id = t.user_id
+		AND t1.sub_id = t.sub_id
+		)
+		AND t4.type_code = 'subject_type'
+		ORDER BY t.create_time
+	</select>
+
+	<update id="updateSubMode" parameterType="java.lang.Integer">
+		UPDATE ALG_SUBJECT
+		SET sub_mode = #{subMode}
+		WHERE id = #{id}
+	</update>
+
+	<select id="getHistoryList" parameterType="java.lang.Integer" resultMap="subject">
+		SELECT t.ID, t.sub_title, t.sub_content, t.sub_level, t2.score AS rela_score,
+		t.sub_type, t1.item_name AS sub_type_name, t.sub_mode, t2.create_time
+		FROM ALG_SUBJECT t
+		LEFT JOIN ALG_DICTIONARY t1 ON t.sub_type = t1.item_code
+		INNER JOIN ALG_JUDGEMENT t2 ON t.id = t2.sub_id
+		WHERE t1.type_code = 'subject_type'
+		AND t.sub_mode > 0
+		AND t2.user_id = #{userId}
+		ORDER BY t2.create_time
+	</select>
+</mapper>

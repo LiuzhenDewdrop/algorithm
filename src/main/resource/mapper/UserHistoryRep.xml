@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.algorithm.repository.UserHistoryRep" >
+	<resultMap id="history" type="com.algorithm.entity.UserHistory" >
+		<id column="ID" property="id" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="user_id" property="userId" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="content" property="content" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="create_time" property="createTime" javaType="java.util.Date"/>
+	</resultMap>
+
+	<select id="getList" resultMap="history" parameterType="java.lang.Integer">
+		SELECT t.ID, t.user_id, t.content, t.create_time
+		FROM USER_HISTORY t
+		WHERE t.user_id = #{userId}
+		ORDER BY t.create_time DESC
+	</select>
+
+	<insert id="addUserHistory" parameterType="com.algorithm.entity.UserHistory" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO USER_HISTORY
+		(user_id, content, create_time)
+		VALUES
+		(#{userId, jdbcType= INTEGER}, #{content, jdbcType= VARCHAR}, #{createTime})
+	</insert>
+
+</mapper>
